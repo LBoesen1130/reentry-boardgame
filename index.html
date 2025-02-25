@@ -1,3 +1,65 @@
+// DOM Elements
+const moneyValue = document.getElementById("money-value");
+const housingValue = document.getElementById("housing-value");
+const employmentValue = document.getElementById("employment-value");
+const legalValue = document.getElementById("legal-value");
+const actionValue = document.getElementById("action-value");
+
+const housingStabilityValue = document.getElementById("housing-stability-value");
+const employmentStabilityValue = document.getElementById("employment-stability-value");
+const healthStabilityValue = document.getElementById("health-stability-value");
+const supportStabilityValue = document.getElementById("support-stability-value");
+
+const notificationText = document.getElementById("notification-text");
+const notification = document.getElementById("notification");
+
+// Game board spaces
+const boardSpaces = [
+  { type: "basic", name: "Start" },
+  { type: "employment", name: "Job Fair" },
+  { type: "legal", name: "Fees Due" },
+  { type: "community", name: "Family" },
+  { type: "setback", name: "Crisis" },
+  { type: "basic", name: "Housing" },
+  { type: "employment", name: "Interview" },
+  { type: "opportunity", name: "Training" },
+  { type: "legal", name: "Court Date" },
+  { type: "setback", name: "Setback" },
+  { type: "community", name: "Support" },
+  { type: "basic", name: "Healthcare" },
+  { type: "employment", name: "Work" },
+  { type: "opportunity", name: "Education" },
+  { type: "legal", name: "Parole" },
+  { type: "setback", name: "Crisis" },
+  { type: "basic", name: "Needs" },
+  { type: "employment", name: "Promotion" },
+  { type: "community", name: "Community" },
+  { type: "opportunity", name: "Chance" }
+];
+
+// Job options
+const availableJobs = [
+  { title: "Dishwasher", pay: 250, stability: 20 },
+  { title: "Fast Food Worker", pay: 300, stability: 25 },
+  { title: "Warehouse Worker", pay: 400, stability: 40 },
+  { title: "Construction Helper", pay: 450, stability: 45 },
+  { title: "Office Assistant", pay: 550, stability: 60 },
+  { title: "Skilled Trade Apprentice", pay: 600, stability: 70 }
+];
+
+// Housing options
+const housingOptions = [
+  { name: "Shared Room", cost: 400, quality: "low" },
+  { name: "Studio Apartment", cost: 600, quality: "medium" },
+  { name: "One-Bedroom Apartment", cost: 800, quality: "high" }
+];
+
+// Function to initialize the game
+function initGame() {
+  updateDisplay();
+  showNotification("Welcome! Navigate the challenges of reentry.", "info");
+}
+
 // Game state
 const gameState = {
   money: 200,
