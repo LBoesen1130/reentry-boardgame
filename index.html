@@ -8,55 +8,44 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f4f4f4;
         }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        #board-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .board-space {
+            width: 100px;
+            height: 100px;
+            border: 1px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .active {
+            background-color: yellow;
         }
         .notification {
-            display: none;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
+            margin-top: 20px;
             font-weight: bold;
         }
-        .notification.success { background-color: lightgreen; }
-        .notification.danger { background-color: lightcoral; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Reentry: The Long Road Home</h1>
+    <h1>Reentry: The Long Road Home</h1>
 
-        <h2>Player Stats</h2>
-        <p>Money: $<span id="money-value">200</span></p>
-        <p>Housing: <span id="housing-value">Halfway House</span></p>
-        <p>Employment: <span id="employment-value">None</span></p>
-        <p>Legal Status: <span id="legal-value">On Parole</span></p>
-        <p>Action Points: <span id="action-value">3</span></p>
+    <h2>Roll the Dice</h2>
+    <button id="roll-dice-btn">Roll Dice</button>
+    <p id="dice-result">Click the button to roll the dice.</p>
 
-        <h2>Stability Meters</h2>
-        <p>Housing: <span id="housing-stability-value">10%</span></p>
-        <p>Employment: <span id="employment-stability-value">0%</span></p>
-        <p>Health: <span id="health-stability-value">50%</span></p>
-        <p>Support: <span id="support-stability-value">20%</span></p>
+    <h2>Game Board</h2>
+    <div id="board-container"></div>
 
-        <h2>Actions</h2>
-        <button onclick="movePlayer()">Move</button>
-        <button onclick="lookForJob()">Look for Job</button>
-        <button onclick="searchHousing()">Search for Housing</button>
-        <button onclick="attendParoleMeeting()">Attend Parole Meeting</button>
-
-        <div id="notification" class="notification"></div>
-    </div>
-
-<script src="script.js" defer></script>
+    <script src="script.js" defer></script>
 
 </body>
 </html>
