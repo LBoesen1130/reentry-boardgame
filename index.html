@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reentry: The Long Road Home</title>
+  <style>
+    :root {
+      --primary: #3a6ea5;
+      --danger: #c23934;
+      --success: #468966;
+      --warning: #e6a822;
+      --info: #7b90c4;
+      --dark: #333;
+      --light: #f8f9fa;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f2f5;
+      color: #333;
+    }
+
+    #game-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      color: var(--dark);
+      font-style: italic;
+    }
+
+    .game-board {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .board-section {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .player-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 150px;
+      background-color: var(--light);
+      border-radius: 6px;
+      padding: 15px;
+      border-left: 4px solid var(--primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: var(--dark);
+    }
+
+    .stat-card .value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .stat-money { border-left-color: #468966; }
+    .stat-money .value { color: #468966; }
+    
+    .stat-housing { border-left-color: #e6a822; }
+    .stat-housing .value { color: #e6a822; }
+    
+    .stat-employment { border-left-color: #7b90c4; }
+    .stat-employment .value { color: #7b90c4; }
+    
+    .stat-legal { border-left-color: #c23934; }
+    .stat-legal .value { color: #c23934; }
+    
+    .stat-health { border-left-color: #5c4e8c; }
+    .stat-health .value { color: #5c4e8c; }
+    
+    .stat-support { border-left-color: #7ba69e; }
+    .stat-support .value { color: #7ba69e; }
+    
+    .stat-actions { border-left-color: #333; }
+    .stat-actions .value { color: #333; }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+
+    .btn-warning {
+      background-color: var(--warning);
+      color: white;
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .btn-info {
+      background-color: var(--info);
+      color: white;
+    }
+
+    .btn-dark {
+      background-color: var(--dark);
+      color: white;
+    }
+
+    .game-path {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .board-space {
+      width: 70px;
+      height: 70px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .board-space.active {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 3px yellow, 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .space-basic {
+      background-color: #3a6ea5;
+    }
+
+    .space-employment {
+      background-color: #468966;
+    }
+
+    .space-legal {
+      background-color: #c23934;
+    }
+
+    .space-community {
+      background-color: #e6a822;
+    }
+
+    .space-setback {
+      background-color: #333;
+    }
+
+    .space-opportunity {
+      background-color: #7b90c4;
+    }
+
+    .player-token {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: white;
+      border-radius: 50%;
+      bottom: 5px;
+      right: 5px;
+    }
+
+    .event-display {
+      margin-top: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .event-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+
+    .event-description {
+      line-height: 1.6;
+    }
+
+    .event-stat {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-left: 4px solid var(--info);
+      font-style: italic;
+    }
+
+    .event-choices {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateX(120%);
+      transition: transform 0.3s ease-out;
+      z-index: 1000;
+      max-width: 300px;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification-success {
+      border-left: 4px solid var(--success);
+    }
+
+    .notification-warning {
+      border-left: 4px solid var(--warning);
+    }
+
+    .notification-danger {
+      border-left: 4px solid var(--danger);
+    }
+
+    .notification-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stability-meters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .stability-meter {
+      flex: 1;
+      min-width: 150px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      padding: 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .meter-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .meter-label span {
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .meter-bar {
+      background-color: #e0e0e0;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+
+    .housing-meter .meter-fill { background-color: #e6a822; }
+    .employment-meter .meter-fill { background-color: #7b90c4; }
+    .health-meter .meter-fill { background-color: #5c4e8c; }
+    .support-meter .meter-fill { background-color: #7ba69e; }
+
+    @media (max-width: 768px) {
+      .stat-card {
+        min-width: 120px;
+      }
+      
+      .board-space {
+        width: 60px;
+        height: 60px;
+        font-size: 0.8rem;
+      }
+    }
+
+    .center-stability {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--dark);
+    }
+
+    .spiral-container {
+      position: relative;
+      width: 600px;
+      height: 600px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 650px) {
+      .spiral-container {
+        width: 100%;
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div class="header">
+      <h1>Reentry: The Long Road Home</h1>
+      <p>Navigate the challenges of life after incarceration</p>
+    </div>
+
+    <div class="game-board">
+      <div class="board-section">
+        <h2>Player Status</h2>
+        <div class="player-stats">
+          <div class="stat-card stat-money">
+            <h3>Money</h3>
+            <div class="value">$<span id="money-value">200</span></div>
+          </div>
+          <div class="stat-card stat-housing">
+            <h3>Housing</h3>
+            <div class="value"><span id="housing-value">Halfway House</span></div>
+          </div>
+          <div class="stat-card stat-employment">
+            <h3>Employment</h3>
+            <div class="value"><span id="employment-value">None</span></div>
+          </div>
+          <div class="stat-card stat-legal">
+            <h3>Legal Status</h3>
+            <div class="value"><span id="legal-value">On Parole</span></div>
+          </div>
+          <div class="stat-card stat-actions">
+            <h3>Action Points</h3>
+            <div class="value"><span id="action-value">3</span>/3</div>
+          </div>
+        </div>
+
+        <div class="stability-meters">
+          <div class="stability-meter housing-meter">
+            <div class="meter-label">
+              <span>Housing Stability</span>
+              <span id="housing-stability-value">10%</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill" id="housing-stability-fill" style="width: 10%;"></div>
+            </div>
+          </div>
+          <div class="stability-meter employment-meter">
+            <div class="meter-label">
+              <span>Employment Stability</span>
+              <span id="employment-stability-value">0%</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill" id="employment-stability-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="stability-meter health-meter">
+            <div class="meter-label">
+              <span>Health</span>
+              <span id="health-stability-value">50%</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill" id="health-stability-fill" style="width: 50%;"></div>
+            </div>
+          </div>
+          <div class="stability-meter support-meter">
+            <div class="meter-label">
+              <span>Support Network</span>
+              <span id="support-stability-value">20%</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill" id="support-stability-fill" style="width: 20%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-dark" id="draw-event-btn">Draw Event Card</button>
+          <button class="btn btn-primary" id="move-btn">Move (1 AP)</button>
+          <button class="btn btn-success" id="job-btn">Look for Job (2 AP)</button>
+          <button class="btn btn-warning" id="housing-btn">Search Housing (2 AP)</button>
+          <button class="btn btn-info" id="support-btn">Build Support (1 AP)</button>
+          <button class="btn btn-danger" id="meeting-btn">Attend Parole Meeting (1 AP)</button>
+        </div>
+      </div>
+
+      <div class="board-section">
+        <h2>Game Board</h2>
+        <div class="spiral-container" id="board-container">
+          <!-- Board spaces will be generated by JavaScript -->
+          <div class="center-stability">STABILITY</div>
+        </div>
+      </div>
+
+      <div class="board-section event-display" id="event-display" style="display: none;">
+        <div class="event-title" id="event-title">Event Title</div>
+        <div class="event-description" id="event-description">Event description will appear here...</div>
+        <div class="event-stat" id="event-stat">Statistic related to this event...</div>
+        <div class="event-choices" id="event-choices">
+          <!-- Choice buttons will be added dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <div id="notification" class="notification">
+      <div class="notification-title" id="notification-title">Title</div>
+      <div id="notification-text">Notification text</div>
+    </div>
+  </div>
+
+  <script>
+    // Game state
+    const gameState = {
+      money: 200,
+      actionPoints: 3,
+      housing: "Halfway House",
+      employment: "None",
+      legalStatus: "On Parole",
+      position: 0,
+      violationPoints: 0,
+      stabilityMeters: {
+        housing: 10,
+        employment: 0,
+        health: 50,
+        support: 20
+      },
+      turn: 1,
+      paroleMeetingAttended: false
+    };
+
+    // Board spaces definition
+    const boardSpaces = [
+      { type: "basic", name: "Start" },
+      { type: "employment", name: "Job Fair" },
+      { type: "legal", name: "Fees Due" },
+      { type: "community", name: "Family" },
+      { type: "setback", name: "Crisis" },
+      { type: "basic", name: "Housing" },
+      { type: "employment", name: "Interview" },
+      { type: "opportunity", name: "Training" },
+      { type: "legal", name: "Court Date" },
+      { type: "setback", name: "Setback" },
+      { type: "community", name: "Support" },
+      { type: "basic", name: "Healthcare" },
+      { type: "employment", name: "Work" },
+      { type: "opportunity", name: "Education" },
+      { type: "legal", name: "Parole" },
+      { type: "setback", name: "Crisis" },
+      { type: "basic", name: "Needs" },
+      { type: "employment", name: "Promotion" },
+      { type: "community", name: "Community" },
+      { type: "opportunity", name: "Chance" }
+    ];
+
+    // Event cards
+    const eventCards = [
+      {
+        title: "Unexpected Medical Issue",
+        description: "You've developed a health problem that requires immediate attention. Without health insurance, the cost is significant.",
+        stat: "Over 80% of formerly incarcerated individuals lack health insurance in their first year after release.",
+        choices: [
+          { text: "Pay for treatment ($100)", action: "payMedical" },
+          { text: "Ignore the issue (affects health)", action: "ignoreMedical" }
+        ]
+      },
+      {
+        title: "Transportation Breakdown",
+        description: "Your only means of transportation to work has broken down. Without it, you risk missing work and losing your job.",
+        stat: "Lack of reliable transportation is cited as a major barrier to employment for 45% of people on parole.",
+        choices: [
+          { text: "Pay for repairs ($75)", action: "payRepairs" },
+          { text: "Take expensive rideshare ($25/day for a week)", action: "useRideshare" },
+          { text: "Risk missing work", action: "riskWork" }
+        ]
+      },
+      {
+        title: "Background Check Notice",
+        description: "Your employer has implemented a new background check policy for all employees. You're worried about how this might affect your position.",
+        stat: "Nearly 60% of employers run background checks, and 75% of those report denying jobs based on criminal history.",
+        choices: [
+          { text: "Tell your manager about your record", action: "tellManager" },
+          { text: "Hope they don't discover your record", action: "hopeNotDiscovered" }
+        ]
+      },
+      {
+        title: "Family Emergency",
+        description: "A family member needs your help, but assisting them will make you miss your scheduled parole meeting.",
+        stat: "Family support is a key factor in successful reentry, but parole violations account for 25% of all prison admissions in some states.",
+        choices: [
+          { text: "Help family (miss parole meeting)", action: "helpFamily" },
+          { text: "Attend parole meeting (can't help family)", action: "attendMeeting" },
+          { text: "Try to reschedule meeting (roll chance)", action: "reschedule" }
+        ]
+      },
+      {
+        title: "Rent Increase",
+        description: "Your landlord has informed you that rent will increase by $100 per month starting next month.",
+        stat: "Over 50% of people with criminal records report being explicitly denied housing, and those who find housing often face higher costs.",
+        choices: [
+          { text: "Look for new housing (2 AP)", action: "findNewHousing" },
+          { text: "Accept the increase", action: "acceptIncrease" },
+          { text: "Negotiate with landlord (chance roll)", action: "negotiate" }
+        ]
+      },
+      {
+        title: "Job Opportunity",
+        description: "You've heard about a better-paying job opportunity, but it would require disclosure of your criminal record.",
+        stat: "People with felony convictions earn on average 22% less than those without records.",
+        choices: [
+          { text: "Apply for new job (2 AP)", action: "applyNewJob" },
+          { text: "Stay at current job", action: "stayAtJob" }
+        ]
+      },
+      {
+        title: "Parole Drug Test",
+        description: "Your parole officer has scheduled a surprise drug test. You attended a party last weekend where others were using substances.",
+        stat: "Technical parole violations like failed drug tests account for approximately 25% of prison admissions in many states.",
+        choices: [
+          { text: "Take the test (roll chance)", action: "takeDrugTest" },
+          { text: "Try to postpone (suspicious)", action: "postponeTest" }
+        ]
+      },
+      {
+        title: "Neighborhood Incident",
+        description: "There was a crime in your neighborhood. Police are questioning residents with criminal records first.",
+        stat: "Formerly incarcerated individuals face heightened police scrutiny, with over 60% reporting being stopped or questioned in their first year after release.",
+        choices: [
+          { text: "Cooperate fully", action: "cooperate" },
+          { text: "Provide minimal information", action: "minimal" },
+          { text: "Consider moving (expensive)", action: "considerMoving" }
+        ]
+      }
+    ];
+
+    // Jobs
+    const availableJobs = [
+      { title: "Dishwasher", pay: 250, stability: 20, difficulty: "easy" },
+      { title: "Fast Food Worker", pay: 300, stability: 25, difficulty: "easy" },
+      { title: "Warehouse Worker", pay: 400, stability: 40, difficulty: "medium" },
+      { title: "Construction Helper", pay: 450, stability: 45, difficulty: "medium" },
+      { title: "Office Assistant", pay: 550, stability: 60, difficulty: "hard" },
+      { title: "Skilled Trade Apprentice", pay: 600, stability: 70, difficulty: "hard" }
+    ];
+
+    // Housing options
+    const housingOptions = [
+      { name: "Shared Room", cost: 400, quality: "low", difficulty: "easy" },
+      { name: "Studio Apartment", cost: 600, quality: "medium", difficulty: "medium" },
+      { name: "One-Bedroom Apartment", cost: 800, quality: "high", difficulty: "hard" }
+    ];
+
+    // DOM elements
+    const moneyValue = document.getElementById('money-value');
+    const housingValue = document.getElementById('housing-value');
+    const employmentValue = document.getElementById('employment-value');
+    const legalValue = document.getElementById('legal-value');
+    const actionValue = document.getElementById('action-value');
+    
+    const housingStabilityValue = document.getElementById('housing-stability-value');
+    const employmentStabilityValue = document.getElementById('employment-stability-value');
+    const healthStabilityValue = document.getElementById('health-stability-value');
+    const supportStabilityValue = document.getElementById('support-stability-value');
+    
+    const housingStabilityFill = document.getElementById('housing-stability-fill');
+    const employmentStabilityFill = document.getElementById('employment-stability-fill');
+    const healthStabilityFill = document.getElementById('health-stability-fill');
+    const supportStabilityFill = document.getElementById('support-stability-fill');
+    
+    const eventDisplay = document.getElementById('event-display');
+    const eventTitle = document.getElementById('event-title');
+    const eventDescription = document.getElementById('event-description');
+    const eventStat = document.getElementById('event-stat');
+    const eventChoices = document.getElementById('event-choices');
+    
+    const notification = document.getElementById('notification');
+    const notificationTitle = document.getElementById('notification-title');
+    const notificationText = document.getElementById('notification-text');
+    
+    const boardContainer = document.getElementById('board-container');
+    
+    const drawEventBtn = document.getElementById('draw-event-btn');
+    const moveBtn = document.getElementById('move-btn');
+    const jobBtn = document.getElementById('job-btn');
+    const housingBtn = document.getElementById('housing-btn');
+    const supportBtn = document.getElementById('support-btn');
+    const meetingBtn = document.getElementById('meeting-btn');
+
+    // Generate spiral board
+    function generateSpiralBoard() {
+      boardContainer.innerHTML = '<div class="center-stability">STABILITY</div>';
+      
+      const centerX = 300;
+      const centerY = 300;
+      let angle = 0;
+      let radius = 40;
+      const radiusIncrement = 15;
+      const angleIncrement = 0.5;
+      
+      for (let i = 0; i < boardSpaces.length; i++) {
+        const space = boardSpaces[i];
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        
+        const spaceEl = document.createElement('div');
+        spaceEl.className = `board-space space-${space.type} ${i === gameState.position ? 'active' : ''}`;
+        spaceEl.textContent = space.name;
+        spaceEl.id = `space-${i}`;
+        spaceEl.style.position = 'absolute';
+        spaceEl.style.left = `${x - 35}px`;
+        spaceEl.style.top = `${y - 35}px`;
+        
+        if (i === gameState.position) {
+          const token = document.createElement('div');
+          token.className = 'player-token';
+          spaceEl.appendChild(token);
+        }
+        
+        boardContainer.appendChild(spaceEl);
+        
+        angle += angleIncrement;
+        radius += radiusIncrement / 5;
+      }
+    }
+
+    // Initialize game
+    function initGame() {
+      updateDisplay();
+      generateSpiralBoard();
+      setupEventListeners();
+    }
+
+    // Update all displayed values
+    function updateDisplay() {
+      moneyValue.textContent = gameState.money;
+      housingValue.textContent = gameState.housing;
+      employmentValue.textContent = gameState.employment;
+      legalValue.textContent = gameState.legalStatus + (gameState.violationPoints > 0 ? ` (${gameState.violationPoints} violations)` : '');
+      actionValue.textContent = gameState.actionPoints;
+      
+      housingStabilityValue.textContent = `${gameState.stabilityMeters.housing}%`;
+      employmentStabilityValue.textContent = `${gameState.stabilityMeters.employment}%`;
+      healthStabilityValue.textContent = `${gameState.stabilityMeters.health}%`;
+      supportStabilityValue.textContent = `${gameState.stabilityMeters.support}%`;
+      
+      housingStabilityFill.style.width = `${gameState.stabilityMeters.housing}%`;
+      employmentStabilityFill.style.width = `${gameState.stabilityMeters.employment}%`;
+      healthStabilityFill.style.width = `${gameState.stabilityMeters.health}%`;
+      supportStabilityFill.style.width = `${gameState.stabilityMeters.support}%`;
+      
+      // Update button states
+      moveBtn.disabled = gameState.actionPoints < 1;
+      jobBtn.disabled = gameState.actionPoints < 2;
+      housingBtn.disabled = gameState.actionPoints < 2;
+      supportBtn.disabled = gameState.actionPoints < 1;
+      meetingBtn.disabled = gameState.actionPoints < 1 || gameState.paroleMeetingAttended;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      drawEventBtn.addEventListener('click', drawEvent);
+      moveBtn.addEventListener('click', movePlayer);
+      jobBtn.addEventListener('click', lookForJob);
+      housingBtn.addEventListener('click', searchHousing);
+      supportBtn.addEventListener('click', buildSupport);
+      meetingBtn.addEventListener('click', attendParoleMeeting);
+    }
+
+    // Draw event card
+    function drawEvent() {
+      const randomEvent = eventCards[Math.floor(Math.random() * eventCards.length)];
+      
+      eventTitle.textContent = randomEvent.title;
+      eventDescription.textContent = randomEvent.description;
+      eventStat.textContent = randomEvent.stat;
+      
+      // Clear previous choices
+      eventChoices.innerHTML = '';
+      
+      // Add choice buttons
+      randomEvent.choices.forEach(choice => {
+        const choiceBtn = document.createElement('button');
+        choiceBtn.className = 'btn btn-primary';
+        choiceBtn.textContent = choice.text;
+        choiceBtn.addEventListener('click', () => handleEventChoice(choice.action));
+        eventChoices.appendChild(choiceBtn);
+      });
+      
+      eventDisplay.style.display = 'block';
+      drawEventBtn.disabled = true;
+    }
+
+    // Handle event choice
+    function handleEventChoice(action) {
+      let message = '';
+      let type = 'notification-warning';
+      
+      switch(action) {
+        case 'payMedical':
+          if (gameState.money >= 100) {
+            gameState.money -= 100;
+            message = 'You paid $100 for medical treatment.';
+          } else {
+            gameState.stabilityMeters.health -= 20;
+            message = 'You couldn\'t afford treatment. Your health has declined.';
+            type = 'notification-danger';
+          }
+          break;
+          
+        case 'ignoreMedical':
+          gameState.stabilityMeters.health -= 30;
+          message = 'Your health has significantly declined from untreated issues.';
+          type = 'notification-danger';
+          break;
+          
+        case 'payRepairs':
+          if (gameState.money >= 75) {
+            gameState.money -= 75;
+            message = 'You paid $75 to repair your transportation.';
+          } else {
+            message = 'You cannot afford repairs.';
+            type = 'notification-danger';
+          }
+          break;
+          
+        case 'useRideshare':
+          if (gameState.money >= 175) {
+            gameState.money -= 175;
+            message = 'You spent $175 on transportation for the week.';
+          } else {
+            message = 'You cannot afford rideshare services for the week.';
+            if (gameState.employment !== 'None') {
+              gameState.stabilityMeters.employment -= 20;
+              message += ' Your employment stability has decreased.';
+            }
+            type = 'notification-danger';
+          }
+          break;
+          
+        case 'riskWork':
+          if (gameState.employment !== 'None') {
+            const roll = Math.random();
+            if (roll < 0.4) {
+              gameState.employment = 'None';
+              gameState.stabilityMeters.employment = 0;
+              message = 'You lost your job due to unreliable attendance.';
+              type = 'notification-danger';
+            } else {
+              gameState.stabilityMeters.employment -= 15;
+              message = 'You kept your job, but your employer is concerned about reliability.';
+            }
+          } else {
+            message = 'Since you don\'t have a job, there was no impact.';
+          }
+          break;
+          
+        case 'tellManager':
+          if (gameState.employment !== 'None
