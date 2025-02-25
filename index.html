@@ -1,224 +1,62 @@
-// DOM Elements
-const moneyValue = document.getElementById("money-value");
-const housingValue = document.getElementById("housing-value");
-const employmentValue = document.getElementById("employment-value");
-const legalValue = document.getElementById("legal-value");
-const actionValue = document.getElementById("action-value");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reentry: The Long Road Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .notification {
+            display: none;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .notification.success { background-color: lightgreen; }
+        .notification.danger { background-color: lightcoral; }
+    </style>
+</head>
+<body>
 
-const housingStabilityValue = document.getElementById("housing-stability-value");
-const employmentStabilityValue = document.getElementById("employment-stability-value");
-const healthStabilityValue = document.getElementById("health-stability-value");
-const supportStabilityValue = document.getElementById("support-stability-value");
+    <div class="container">
+        <h1>Reentry: The Long Road Home</h1>
 
-const notificationText = document.getElementById("notification-text");
-const notification = document.getElementById("notification");
+        <h2>Player Stats</h2>
+        <p>Money: $<span id="money-value">200</span></p>
+        <p>Housing: <span id="housing-value">Halfway House</span></p>
+        <p>Employment: <span id="employment-value">None</span></p>
+        <p>Legal Status: <span id="legal-value">On Parole</span></p>
+        <p>Action Points: <span id="action-value">3</span></p>
 
-// Game board spaces
-const boardSpaces = [
-  { type: "basic", name: "Start" },
-  { type: "employment", name: "Job Fair" },
-  { type: "legal", name: "Fees Due" },
-  { type: "community", name: "Family" },
-  { type: "setback", name: "Crisis" },
-  { type: "basic", name: "Housing" },
-  { type: "employment", name: "Interview" },
-  { type: "opportunity", name: "Training" },
-  { type: "legal", name: "Court Date" },
-  { type: "setback", name: "Setback" },
-  { type: "community", name: "Support" },
-  { type: "basic", name: "Healthcare" },
-  { type: "employment", name: "Work" },
-  { type: "opportunity", name: "Education" },
-  { type: "legal", name: "Parole" },
-  { type: "setback", name: "Crisis" },
-  { type: "basic", name: "Needs" },
-  { type: "employment", name: "Promotion" },
-  { type: "community", name: "Community" },
-  { type: "opportunity", name: "Chance" }
-];
+        <h2>Stability Meters</h2>
+        <p>Housing: <span id="housing-stability-value">10%</span></p>
+        <p>Employment: <span id="employment-stability-value">0%</span></p>
+        <p>Health: <span id="health-stability-value">50%</span></p>
+        <p>Support: <span id="support-stability-value">20%</span></p>
 
-// Job options
-const availableJobs = [
-  { title: "Dishwasher", pay: 250, stability: 20 },
-  { title: "Fast Food Worker", pay: 300, stability: 25 },
-  { title: "Warehouse Worker", pay: 400, stability: 40 },
-  { title: "Construction Helper", pay: 450, stability: 45 },
-  { title: "Office Assistant", pay: 550, stability: 60 },
-  { title: "Skilled Trade Apprentice", pay: 600, stability: 70 }
-];
+        <h2>Actions</h2>
+        <button onclick="movePlayer()">Move</button>
+        <button onclick="lookForJob()">Look for Job</button>
+        <button onclick="searchHousing()">Search for Housing</button>
+        <button onclick="attendParoleMeeting()">Attend Parole Meeting</button>
 
-// Housing options
-const housingOptions = [
-  { name: "Shared Room", cost: 400, quality: "low" },
-  { name: "Studio Apartment", cost: 600, quality: "medium" },
-  { name: "One-Bedroom Apartment", cost: 800, quality: "high" }
-];
+        <div id="notification" class="notification"></div>
+    </div>
 
-// Function to initialize the game
-function initGame() {
-  updateDisplay();
-  showNotification("Welcome! Navigate the challenges of reentry.", "info");
-}
+    <script src="script.js" defer></script>
 
-// Game state
-const gameState = {
-  money: 200,
-  actionPoints: 3,
-  housing: "Halfway House",
-  employment: "None",
-  legalStatus: "On Parole",
-  position: 0,
-  violationPoints: 0,
-  stabilityMeters: {
-    housing: 10,
-    employment: 0,
-    health: 50,
-    support: 20
-  },
-  turn: 1,
-  paroleMeetingAttended: false
-};
-
-// Function to move the player
-function movePlayer() {
-  if (gameState.actionPoints > 0) {
-    gameState.position = (gameState.position + 1) % boardSpaces.length;
-    gameState.actionPoints--;
-    updateDisplay();
-    checkSpaceEffect();
-    checkGameOver();
-  }
-}
-
-// Function to handle space effects
-function checkSpaceEffect() {
-  const currentSpace = boardSpaces[gameState.position];
-  let message = `You landed on ${currentSpace.name}.`;
-  
-  switch (currentSpace.type) {
-    case "employment":
-      gameState.stabilityMeters.employment += 10;
-      message += " Your employment stability increased.";
-      break;
-    case "legal":
-      gameState.violationPoints++;
-      message += " You encountered a legal issue, increasing your violations.";
-      break;
-    case "community":
-      gameState.stabilityMeters.support += 5;
-      message += " Your support network grew.";
-      break;
-    case "setback":
-      gameState.money -= 50;
-      message += " A financial setback occurred.";
-      break;
-  }
-  showNotification(message, "info");
-}
-
-// Function to handle job search
-function lookForJob() {
-  if (gameState.actionPoints >= 2) {
-    const job = availableJobs[Math.floor(Math.random() * availableJobs.length)];
-    gameState.money += job.pay;
-    gameState.stabilityMeters.employment += job.stability;
-    gameState.employment = job.title;
-    gameState.actionPoints -= 2;
-    showNotification(`You got a job as a ${job.title}, earning $${job.pay}.`, "success");
-    updateDisplay();
-    checkGameOver();
-  }
-}
-
-// Function to search for housing
-function searchHousing() {
-  if (gameState.actionPoints >= 2) {
-    const housing = housingOptions[Math.floor(Math.random() * housingOptions.length)];
-    if (gameState.money >= housing.cost) {
-      gameState.money -= housing.cost;
-      gameState.housing = housing.name;
-      gameState.stabilityMeters.housing += 15;
-      showNotification(`You moved into ${housing.name}.`, "success");
-    } else {
-      showNotification("You don't have enough money for this housing option.", "danger");
-    }
-    gameState.actionPoints -= 2;
-    updateDisplay();
-    checkGameOver();
-  }
-}
-
-// Function to handle parole meeting
-function attendParoleMeeting() {
-  if (gameState.actionPoints >= 1) {
-    gameState.paroleMeetingAttended = true;
-    gameState.violationPoints = Math.max(0, gameState.violationPoints - 1);
-    gameState.actionPoints--;
-    showNotification("You attended your parole meeting. Violations reduced.", "success");
-    updateDisplay();
-    checkGameOver();
-  }
-}
-
-// Function to check win/loss conditions
-function checkGameOver() {
-  if (gameState.violationPoints >= 3) {
-    showNotification("Game Over: You violated parole too many times and were reincarcerated.", "danger");
-    resetGame();
-  } else if (
-    gameState.stabilityMeters.housing >= 80 &&
-    gameState.stabilityMeters.employment >= 80 &&
-    gameState.stabilityMeters.health >= 80 &&
-    gameState.stabilityMeters.support >= 80
-  ) {
-    showNotification("Congratulations! You've successfully reintegrated into society!", "success");
-    resetGame();
-  }
-}
-
-// Function to reset the game after win/loss
-function resetGame() {
-  setTimeout(() => {
-    gameState.money = 200;
-    gameState.actionPoints = 3;
-    gameState.housing = "Halfway House";
-    gameState.employment = "None";
-    gameState.legalStatus = "On Parole";
-    gameState.position = 0;
-    gameState.violationPoints = 0;
-    gameState.stabilityMeters = {
-      housing: 10,
-      employment: 0,
-      health: 50,
-      support: 20
-    };
-    gameState.turn = 1;
-    gameState.paroleMeetingAttended = false;
-    updateDisplay();
-    showNotification("New game started! Try again!", "info");
-  }, 3000);
-}
-
-// Function to update the game display
-function updateDisplay() {
-  moneyValue.textContent = gameState.money;
-  housingValue.textContent = gameState.housing;
-  employmentValue.textContent = gameState.employment;
-  legalValue.textContent = `${gameState.legalStatus} (${gameState.violationPoints} violations)`;
-  actionValue.textContent = gameState.actionPoints;
-  housingStabilityValue.textContent = `${gameState.stabilityMeters.housing}%`;
-  employmentStabilityValue.textContent = `${gameState.stabilityMeters.employment}%`;
-  healthStabilityValue.textContent = `${gameState.stabilityMeters.health}%`;
-  supportStabilityValue.textContent = `${gameState.stabilityMeters.support}%`;
-}
-
-// Function to show notifications
-function showNotification(message, type) {
-  notificationText.textContent = message;
-  notification.className = `notification ${type}`;
-  notification.classList.add("show");
-  setTimeout(() => notification.classList.remove("show"), 3000);
-}
-
-// Initialize game
-initGame();
+</body>
+</html>
