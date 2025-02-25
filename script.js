@@ -1,107 +1,149 @@
 // Game state
 const gameState = {
-    money: 200,
-    actionPoints: 3,
-    housing: "Halfway House",
-    employment: "None",
-    legalStatus: "On Parole",
-    violationPoints: 0,
-    stabilityMeters: {
-        housing: 10,
-        employment: 0,
-        health: 50,
-        support: 20
-    }
+  money: 200,
+  actionPoints: 3,
+  housing: "Halfway House",
+  employment: "None",
+  legalStatus: "On Parole",
+  position: 0,
+  violationPoints: 0,
+  stabilityMeters: {
+    housing: 10,
+    employment: 0,
+    health: 50,
+    support: 20
+  },
+  turn: 1,
+  paroleMeetingAttended: false
 };
 
 // DOM Elements
-const moneyValue = document.getElementById("money-value");
-const housingValue = document.getElementById("housing-value");
-const employmentValue = document.getElementById("employment-value");
-const legalValue = document.getElementById("legal-value");
-const actionValue = document.getElementById("action-value");
+const boardContainer = document.getElementById("board-container");
+const diceRollBtn = document.getElementById("roll-dice-btn");
+const diceResult = document.getElementById("dice-result");
 
-const housingStabilityValue = document.getElementById("housing-stability-value");
-const employmentStabilityValue = document.getElementById("employment-stability-value");
-const healthStabilityValue = document.getElementById("health-stability-value");
-const supportStabilityValue = document.getElementById("support-stability-value");
+// Game board spaces
+const boardSpaces = [
+  { type: "start", name: "Start" },
+  { type: "employment", name: "Job Fair" },
+  { type: "legal", name: "Fees Due" },
+  { type: "community", name: "Family Support" },
+  { type: "setback", name: "Parole Check" },
+  { type: "opportunity", name: "Job Interview" },
+  { type: "setback", name: "Unexpected Expense" },
+  { type: "community", name: "Support Group" },
+  { type: "employment", name: "Training Program" },
+  { type: "setback", name: "Health Issue" },
+  { type: "legal", name: "Court Date" },
+  { type: "community", name: "Mentor Meeting" },
+  { type: "opportunity", name: "New Housing" },
+  { type: "employment", name: "Promotion" },
+  { type: "setback", name: "Parole Violation Risk" },
+  { type: "opportunity", name: "College Enrollment" },
+  { type: "community", name: "Religious Support" },
+  { type: "legal", name: "Probation Review" },
+  { type: "setback", name: "Missed Appointment" },
+  { type: "opportunity", name: "Career Fair" }
+];
 
-const notification = document.getElementById("notification");
+// Function to roll dice and move player
+function rollDice() {
+  const roll = Math.floor(Math.random() * 6) + 1;
+  diceResult.textContent = `You rolled a ${roll}!`;
+  movePlayer(roll);
+}
 
-// Function to update UI
-function updateDisplay() {
-    moneyValue.textContent = gameState.money;
-    housingValue.textContent = gameState.housing;
-    employmentValue.textContent = gameState.employment;
-    legalValue.textContent = gameState.legalStatus;
-    actionValue.textContent = gameState.actionPoints;
-    
-    housingStabilityValue.textContent = `${gameState.stabilityMeters.housing}%`;
-    employmentStabilityValue.textContent = `${gameState.stabilityMeters.employment}%`;
-    healthStabilityValue.textContent = `${gameState.stabilityMeters.health}%`;
-    supportStabilityValue.textContent = `${gameState.stabilityMeters.support}%`;
+diceRollBtn.addEventListener("click", rollDice);
+
+// Function to move player
+function movePlayer(roll) {
+  gameState.position = (gameState.position + roll) % boardSpaces.length;
+  updateBoard();
+  checkSpaceEffect();
+  checkGameOver();
+}
+
+// Function to update board
+function updateBoard() {
+  boardContainer.innerHTML = "";
+  boardSpaces.forEach((space, index) => {
+    const spaceEl = document.createElement("div");
+    spaceEl.className = `board-space space-${space.type}`;
+    spaceEl.textContent = space.name;
+    if (index === gameState.position) {
+      spaceEl.classList.add("active");
+    }
+    boardContainer.appendChild(spaceEl);
+  });
+}
+
+// Function to handle space effects
+function checkSpaceEffect() {
+  const currentSpace = boardSpaces[gameState.position];
+  let message = `You landed on ${currentSpace.name}.`;
+  switch (currentSpace.type) {
+    case "employment":
+      gameState.stabilityMeters.employment += 10;
+      message += " Your employment stability increased.";
+      break;
+    case "legal":
+      gameState.violationPoints++;
+      message += " You encountered a legal issue, increasing your violations.";
+      break;
+    case "community":
+      gameState.stabilityMeters.support += 5;
+      message += " Your support network grew.";
+      break;
+    case "setback":
+      gameState.money -= 50;
+      message += " A financial setback occurred.";
+      break;
+    case "opportunity":
+      gameState.money += 100;
+      gameState.stabilityMeters.housing += 10;
+      message += " You found a great opportunity and gained stability!";
+      break;
+  }
+  showNotification(message, "info");
+}
+
+// Function to check win/loss conditions
+function checkGameOver() {
+  if (gameState.violationPoints >= 3) {
+    showNotification("Game Over: You violated parole too many times and were reincarcerated.", "danger");
+    resetGame();
+  } else if (
+    gameState.stabilityMeters.housing >= 80 &&
+    gameState.stabilityMeters.employment >= 80 &&
+    gameState.stabilityMeters.health >= 80 &&
+    gameState.stabilityMeters.support >= 80
+  ) {
+    showNotification("Congratulations! You've successfully reintegrated into society!", "success");
+    resetGame();
+  }
+}
+
+// Function to reset the game
+function resetGame() {
+  setTimeout(() => {
+    gameState.position = 0;
+    gameState.money = 200;
+    gameState.stabilityMeters = {
+      housing: 10,
+      employment: 0,
+      health: 50,
+      support: 20
+    };
+    gameState.violationPoints = 0;
+    updateBoard();
+    showNotification("New game started! Try again!", "info");
+  }, 3000);
 }
 
 // Function to show notifications
 function showNotification(message, type) {
-    notification.textContent = message;
-    notification.className = `notification ${type}`;
-    notification.style.display = "block";
-    setTimeout(() => { notification.style.display = "none"; }, 3000);
-}
-
-// Move player function
-function movePlayer() {
-    if (gameState.actionPoints > 0) {
-        gameState.actionPoints--;
-        showNotification("You moved forward.", "success");
-        updateDisplay();
-    } else {
-        showNotification("Not enough action points!", "danger");
-    }
-}
-
-// Look for job function
-function lookForJob() {
-    if (gameState.actionPoints >= 2) {
-        gameState.actionPoints -= 2;
-        gameState.money += 300;
-        gameState.stabilityMeters.employment += 10;
-        gameState.employment = "Fast Food Worker";
-        showNotification("You got a job in fast food!", "success");
-        updateDisplay();
-    } else {
-        showNotification("Not enough action points!", "danger");
-    }
-}
-
-// Search for housing function
-function searchHousing() {
-    if (gameState.actionPoints >= 2) {
-        if (gameState.money >= 500) {
-            gameState.money -= 500;
-            gameState.housing = "Apartment";
-            gameState.stabilityMeters.housing += 20;
-            showNotification("You moved into an apartment!", "success");
-        } else {
-            showNotification("Not enough money!", "danger");
-        }
-        gameState.actionPoints -= 2;
-        updateDisplay();
-    }
-}
-
-// Attend parole meeting function
-function attendParoleMeeting() {
-    if (gameState.actionPoints >= 1) {
-        gameState.actionPoints--;
-        gameState.violationPoints = Math.max(0, gameState.violationPoints - 1);
-        showNotification("You attended your parole meeting.", "success");
-        updateDisplay();
-    } else {
-        showNotification("Not enough action points!", "danger");
-    }
+  alert(message);
 }
 
 // Initialize game
-updateDisplay();
+updateBoard();
